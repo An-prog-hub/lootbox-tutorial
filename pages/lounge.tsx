@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { ThirdwebSDK } from "@3rdweb/sdk";
 import { useWeb3 } from "@3rdweb/hooks";
-import type { PackMetadataWithBalance } from "@3rdweb/sdk";
+import type { BundleMetadata, PackMetadataWithBalance } from "@3rdweb/sdk";
 import OpenButton from "../components/open-button";
-import { packAddress } from "../lib/contractAddresses";
+import { packAddress, bundleAddress } from "../lib/contractAddresses";
 import NFT from "../components/nft";
 
 export function getStaticProps() {
@@ -15,14 +15,19 @@ export function getStaticProps() {
 }
 
 export default function Lounge() {
-  const { address } = useWeb3();
+  const { address, provider } = useWeb3();
   const [loading, setLoading] = useState(false);
   const [packNfts, setPackNfts] = useState<PackMetadataWithBalance[]>([]);
+  const [bundleNfts, setBundleNfts] = useState<BundleMetadata[]>([]);
 
   async function getNfts() {
-    const fetchedPackNfts = await packModule.getOwned(address);
-    console.log(fetchedPackNfts);
+    const [fetchedPackNfts, fetchedBundleNfts] = await Promise.all([
+      packModule.getOwned(address),
+      bundleModule.getOwned(address),
+    ]);
+    console.log({ fetchedPackNfts, fetchedBundleNfts });
     setPackNfts(fetchedPackNfts);
+    setBundleNfts(fetchedBundleNfts);
   }
 
   async function getNftsWithLoading() {
@@ -33,28 +38,24 @@ export default function Lounge() {
       setLoading(false);
     }
   }
-
-  // async function getNftsWithLoading() {
-  //   setLoading(true);
-  //   try {
-  //     const fetchedPackNfts = await packModule.getOwned(address);
-  //     console.log(fetchedPackNfts);
-  //     setPackNfts(fetchedPackNfts);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // }
-
   useEffect(() => {
     if (address) {
       getNftsWithLoading();
     }
   }, [address]);
 
+  const signer = provider?.getSigner();
+  useEffect(() => {
+    if (signer) {
+      sdk.setProviderOrSigner(signer);
+    }
+  }, [signer]);
+
   const sdk = new ThirdwebSDK(
     "https://winter-icy-sun.matic-testnet.quiknode.pro/f36aa318f8f806e4e15a58ab4a1b6cb9f9e9d9b9/"
   );
   const packModule = sdk.getPackModule(packAddress);
+  const bundleModule = sdk.getBundleModule(bundleAddress);
 
   if (!address) {
     return (
@@ -118,5 +119,7 @@ export default function Lounge() {
       </div>
     </div>
   );
-  return <p>You need to own some NFTs to access the lounge!</p>;
+  if (packNfts.length === 0 && bundleNfts.length === 0) {
+    return <p>You need to own some NFTs to access the lounge!</p>;
+  }
 }
