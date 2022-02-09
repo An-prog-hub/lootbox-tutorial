@@ -1,7 +1,7 @@
+import { useEffect, useState } from "react";
 import { ThirdwebSDK } from "@3rdweb/sdk";
 import { useWeb3 } from "@3rdweb/hooks";
 import type { PackMetadataWithBalance } from "@3rdweb/sdk";
-import { useEffect, useState } from "react";
 import OpenButton from "../components/open-button";
 import { packAddress } from "../lib/contractAddresses";
 import NFT from "../components/nft";
@@ -19,22 +19,42 @@ export default function Lounge() {
   const [loading, setLoading] = useState(false);
   const [packNfts, setPackNfts] = useState<PackMetadataWithBalance[]>([]);
 
+  async function getNfts() {
+    const fetchedPackNfts = await packModule.getOwned(address);
+    console.log(fetchedPackNfts);
+    setPackNfts(fetchedPackNfts);
+  }
+
   async function getNftsWithLoading() {
     setLoading(true);
     try {
-      const fetchedPackNfts = await packModule.getOwned(address);
-      console.log(fetchedPackNfts);
-      setPackNfts(fetchedPackNfts);
+      await getNfts();
     } finally {
       setLoading(false);
     }
   }
+
+  // async function getNftsWithLoading() {
+  //   setLoading(true);
+  //   try {
+  //     const fetchedPackNfts = await packModule.getOwned(address);
+  //     console.log(fetchedPackNfts);
+  //     setPackNfts(fetchedPackNfts);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // }
 
   useEffect(() => {
     if (address) {
       getNftsWithLoading();
     }
   }, [address]);
+
+  const sdk = new ThirdwebSDK(
+    "https://winter-icy-sun.matic-testnet.quiknode.pro/f36aa318f8f806e4e15a58ab4a1b6cb9f9e9d9b9/"
+  );
+  const packModule = sdk.getPackModule(packAddress);
 
   if (!address) {
     return (
@@ -85,6 +105,7 @@ export default function Lounge() {
               <p className="text-gray-800">
                 Balance: {packNfts[0].ownedByAddress.toString()}
               </p>
+              <OpenButton packModule={packModule} afterOpen={getNfts} />
             </div>
           </div>
         </div>
@@ -97,9 +118,5 @@ export default function Lounge() {
       </div>
     </div>
   );
-  const sdk = new ThirdwebSDK(
-    "https://winter-icy-sun.matic-testnet.quiknode.pro/f36aa318f8f806e4e15a58ab4a1b6cb9f9e9d9b9/"
-  );
-  const packModule = sdk.getPackModule(packAddress);
   return <p>You need to own some NFTs to access the lounge!</p>;
 }

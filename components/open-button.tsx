@@ -14,14 +14,14 @@ export default function OpenButton({ packModule, afterOpen }: Props) {
 
   const openPack = async () => {
     setOpening(true);
-    try { 
+    try {
       const nftMetadata = await packModule.open("0");
       setOpening(false);
       toast.success(<NFT metadata={nftMetadata[0]} />, {
         style: {
           minWidth: "300px",
         },
-        duration: 3500,
+        duration: 4000,
       });
       await afterOpen();
     } catch (err) {
