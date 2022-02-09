@@ -20,6 +20,10 @@ export default function Lounge() {
   const [packNfts, setPackNfts] = useState<PackMetadataWithBalance[]>([]);
   const [bundleNfts, setBundleNfts] = useState<BundleMetadata[]>([]);
 
+  const sdk = new ThirdwebSDK(
+    "https://winter-icy-sun.matic-testnet.quiknode.pro/f36aa318f8f806e4e15a58ab4a1b6cb9f9e9d9b9/"
+  );
+
   async function getNfts() {
     const [fetchedPackNfts, fetchedBundleNfts] = await Promise.all([
       packModule.getOwned(address),
@@ -51,9 +55,6 @@ export default function Lounge() {
     }
   }, [signer]);
 
-  const sdk = new ThirdwebSDK(
-    "https://winter-icy-sun.matic-testnet.quiknode.pro/f36aa318f8f806e4e15a58ab4a1b6cb9f9e9d9b9/"
-  );
   const packModule = sdk.getPackModule(packAddress);
   const bundleModule = sdk.getBundleModule(bundleAddress);
 
